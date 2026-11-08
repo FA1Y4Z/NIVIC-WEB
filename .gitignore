@@ -1,0 +1,13 @@
+# Maven
+target/
+
+# IntelliJ IDEA
+.idea/
+
+# Configurações locais
+.env
+application-local.properties
+
+# Sistema operacional
+.DS_Store
+src/main/resources/application.properties
