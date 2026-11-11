@@ -1,9 +1,12 @@
+
 package com.nivic.controller;
 
 import com.nivic.dto.UsuarioCadastroDTO;
 import com.nivic.service.SenhaService;
 
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
+
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -22,33 +25,24 @@ public class UsuarioController {
 
     public UsuarioController(
             JdbcTemplate jdbcTemplate,
-            SenhaService senhaService) {
+            SenhaService senhaService
+    ) {
         this.jdbcTemplate = jdbcTemplate;
         this.senhaService = senhaService;
     }
 
-    @GetMapping
-    public List<Map<String, Object>> listarUsuarios() {
-
-        String sql = """
-                SELECT id, nome, email
-                FROM usuarios
-                ORDER BY id
-                """;
-
-        return jdbcTemplate.queryForList(sql);
-    }
-
     @PostMapping
     public ResponseEntity<?> cadastrarUsuario(
-            @Valid @RequestBody UsuarioCadastroDTO dados) {
-
+            @Valid @RequestBody UsuarioCadastroDTO dados
+    ) {
         String sql = """
                 INSERT INTO usuarios (nome, email, senha)
                 VALUES (?, ?, ?)
                 """;
 
-        String senhaHash = senhaService.criptografar(dados.getSenha());
+        String senhaHash = senhaService.criptografar(
+                dados.getSenha()
+        );
 
         try {
             jdbcTemplate.update(
@@ -61,16 +55,40 @@ public class UsuarioController {
             return ResponseEntity
                     .status(HttpStatus.CREATED)
                     .body(Map.of(
-                            "mensagem", "Usuário cadastrado com sucesso!"
+                            "mensagem",
+                            "Usuário cadastrado com sucesso!"
                     ));
 
         } catch (DuplicateKeyException e) {
-
             return ResponseEntity
                     .status(HttpStatus.CONFLICT)
                     .body(Map.of(
-                            "erro", "Este e-mail já está cadastrado."
+                            "erro",
+                            "Este e-mail já está cadastrado."
                     ));
         }
+    }
+
+    @GetMapping("/me")
+    public ResponseEntity<?> buscarUsuarioAutenticado(
+            HttpServletRequest request
+    ) {
+        Integer usuarioId = (Integer)
+                request.getAttribute("usuarioId");
+
+        String sql = """
+                SELECT id, nome, email
+                FROM usuarios
+                WHERE id = ?
+                """;
+
+        List<Map<String, Object>> usuarios =
+                jdbcTemplate.queryForList(sql, usuarioId);
+
+        if (usuarios.isEmpty()) {
+            return ResponseEntity.notFound().build();
+        }
+
+        return ResponseEntity.ok(usuarios.get(0));
     }
 }
