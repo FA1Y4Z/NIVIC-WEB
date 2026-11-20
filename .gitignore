@@ -11,3 +11,4 @@ application-local.properties
 # Sistema operacional
 .DS_Store
 src/main/resources/application.properties
+/backend/src/main/resources/application.properties

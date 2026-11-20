@@ -27,6 +27,10 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         String caminho = request.getServletPath();
         String metodo = request.getMethod();
 
+        if (metodo.equals("OPTIONS")) {
+            return true;
+        }
+
         if (!caminho.startsWith("/api/")) {
             return true;
         }

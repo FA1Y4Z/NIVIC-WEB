@@ -1,0 +1,291 @@
+
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <meta name="theme-color" content="#062b38">
+    <meta name="description" content="NIVIC: organize suas receitas, despesas e metas financeiras em um só lugar.">
+
+    <title>NIVIC | Organização Financeira</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap"
+        rel="stylesheet"
+    >
+
+    <link rel="stylesheet" href="styles.css">
+</head>
+
+<body>
+
+    <!-- AUTENTICAÇÃO -->
+
+    <section id="auth" class="auth">
+
+        <div class="auth-card">
+
+            <div class="logo">
+                <b>◈</b> NIVIC
+            </div>
+
+            <p id="authText">
+                Seu controle financeiro,<br>
+                mais simples.
+            </p>
+
+            <!-- LOGIN -->
+
+            <form id="loginForm">
+
+                <label class="sr-only" for="loginEmail">E-mail</label>
+                <input
+                    id="loginEmail"
+                    type="email"
+                    placeholder="E-mail"
+                    autocomplete="email"
+                    required
+                >
+
+                <label class="sr-only" for="loginPass">Senha</label>
+                <input
+                    id="loginPass"
+                    type="password"
+                    placeholder="Senha"
+                    autocomplete="current-password"
+                    required
+                >
+
+                <p class="error" id="loginError" role="alert" aria-live="polite"></p>
+
+                <button class="primary" type="submit">
+                    Entrar
+                </button>
+
+            </form>
+
+            <!-- CADASTRO -->
+
+            <form id="registerForm" class="hide">
+
+                <label class="sr-only" for="regName">Nome completo</label>
+                <input
+                    id="regName"
+                    type="text"
+                    placeholder="Nome completo"
+                    autocomplete="name"
+                    required
+                >
+
+                <label class="sr-only" for="regEmail">E-mail</label>
+                <input
+                    id="regEmail"
+                    type="email"
+                    placeholder="E-mail"
+                    autocomplete="email"
+                    required
+                >
+
+                <label class="sr-only" for="regPass">Senha</label>
+                <input
+                    id="regPass"
+                    type="password"
+                    placeholder="Senha (mínimo 6 caracteres)"
+                    minlength="6"
+                    autocomplete="new-password"
+                    required
+                >
+
+                <label class="sr-only" for="regConfirm">Confirmar senha</label>
+                <input
+                    id="regConfirm"
+                    type="password"
+                    placeholder="Confirmar senha"
+                    minlength="6"
+                    autocomplete="new-password"
+                    required
+                >
+
+                <p class="error" id="regError" role="alert" aria-live="polite"></p>
+
+                <button class="primary" type="submit">
+                    Criar minha conta
+                </button>
+
+            </form>
+
+            <p class="switch" id="switch">
+                Não tem uma conta?
+                <button type="button" id="toRegister">
+                    Cadastre-se
+                </button>
+            </p>
+
+        </div>
+
+    </section>
+
+    <!-- APLICAÇÃO -->
+
+    <section id="application" class="hide app">
+
+        <!-- MENU LATERAL -->
+
+        <aside class="sidebar">
+
+            <div class="logo">
+                <b>◈</b> NIVIC
+            </div>
+
+            <small>MENU PRINCIPAL</small>
+
+            <nav aria-label="Navegação principal">
+
+                <button
+                    type="button"
+                    data-page="dashboard"
+                    class="selected"
+                >
+                    ⌂　Início
+                </button>
+
+                <button type="button" data-page="receitas">
+                    ↗　Receitas
+                </button>
+
+                <button type="button" data-page="despesas">
+                    ↘　Despesas
+                </button>
+
+                <button type="button" data-page="metas">
+                    ◎　Metas
+                </button>
+
+                <button type="button" data-page="conta">
+                    ♙　Minha conta
+                </button>
+
+            </nav>
+
+            <button type="button" id="logout" class="logout">
+                ⇥　Sair da conta
+            </button>
+
+            <small class="side-note">
+                ● Seus dados estão vinculados à sua conta
+            </small>
+
+        </aside>
+
+        <!-- CONTEÚDO PRINCIPAL -->
+
+        <main>
+
+            <header>
+
+                <div>
+                    <small>SISTEMA DE ORGANIZAÇÃO FINANCEIRA</small>
+                    <h1 id="title">Dashboard financeiro</h1>
+                </div>
+
+                <div class="user">
+
+                    <span id="avatar" aria-hidden="true">U</span>
+
+                    <b id="userName">
+                        Usuário
+                    </b>
+
+                </div>
+
+            </header>
+
+            <div id="content" class="content"></div>
+
+        </main>
+
+    </section>
+
+    <!-- MODAL DE REGISTROS -->
+
+    <div
+        id="modal"
+        class="overlay hide"
+    >
+
+        <form
+            id="recordForm"
+            class="modal"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="modalTitle"
+        >
+
+            <div class="modal-title">
+
+                <div>
+                    <small>NIVIC</small>
+                    <h2 id="modalTitle">Novo registro</h2>
+                </div>
+
+                <button
+                    type="button"
+                    id="close"
+                    class="close"
+                    aria-label="Fechar janela"
+                >
+                    ×
+                </button>
+
+            </div>
+
+            <div id="modalFields"></div>
+
+            <p
+                id="modalError"
+                class="error"
+                role="alert"
+                aria-live="polite"
+            ></p>
+
+            <div class="buttons">
+
+                <button
+                    type="button"
+                    id="cancel"
+                    class="secondary"
+                >
+                    Cancelar
+                </button>
+
+                <button
+                    type="submit"
+                    class="primary"
+                >
+                    Salvar
+                </button>
+
+            </div>
+
+        </form>
+
+    </div>
+
+    <!-- NOTIFICAÇÕES -->
+
+    <div
+        id="toast"
+        role="status"
+        aria-live="polite"
+    ></div>
+
+    <script src="script.js"></script>
+
+</body>
+
+</html>
