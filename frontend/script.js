@@ -60,6 +60,10 @@ let store = {
     despesas: [],
     metas: []
 };
+let dashboardCharts = {
+    monthly: null,
+    categories: null
+};
 
 async function api(path, options = {}) {
     const headers = {
@@ -416,6 +420,187 @@ function pct(goal) {
     return Math.max(0, Math.min(100, Math.round((current / target) * 100)));
 }
 
+function destroyDashboardCharts() {
+    if (dashboardCharts.monthly) {
+        dashboardCharts.monthly.destroy();
+        dashboardCharts.monthly = null;
+    }
+
+    if (dashboardCharts.categories) {
+        dashboardCharts.categories.destroy();
+        dashboardCharts.categories = null;
+    }
+}
+
+function getMonthlyData() {
+    const months = [];
+
+    for (let i = 5; i >= 0; i--) {
+        const date = new Date();
+
+        date.setDate(1);
+        date.setMonth(date.getMonth() - i);
+
+        months.push({
+            key: `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`,
+            label: date.toLocaleDateString('pt-BR', {
+                month: 'short'
+            })
+        });
+    }
+
+    const income = months.map(month =>
+        store.receitas
+            .filter(item => String(item.data).slice(0, 7) === month.key)
+            .reduce((sum, item) => sum + Number(item.valor || 0), 0)
+    );
+
+    const expenses = months.map(month =>
+        store.despesas
+            .filter(item => String(item.data).slice(0, 7) === month.key)
+            .reduce((sum, item) => sum + Number(item.valor || 0), 0)
+    );
+
+    return {
+        labels: months.map(month => month.label),
+        income,
+        expenses
+    };
+}
+
+function getCategoryData() {
+    const categories = {};
+
+    store.despesas.forEach(item => {
+        const category = item.categoria || 'Sem categoria';
+
+        categories[category] =
+            (categories[category] || 0) + Number(item.valor || 0);
+    });
+
+    return {
+        labels: Object.keys(categories),
+        values: Object.values(categories)
+    };
+}
+
+function renderDashboardCharts() {
+    const monthlyCanvas = document.getElementById('monthlyChart');
+    const categoryCanvas = document.getElementById('categoryChart');
+    const categoryEmpty = document.getElementById('categoryEmpty');
+
+    if (!monthlyCanvas || !categoryCanvas || typeof Chart === 'undefined') {
+        return;
+    }
+
+    const monthly = getMonthlyData();
+
+    dashboardCharts.monthly = new Chart(monthlyCanvas, {
+        type: 'bar',
+
+        data: {
+            labels: monthly.labels,
+
+            datasets: [
+                {
+                    label: 'Receitas',
+                    data: monthly.income,
+                    backgroundColor: '#16c99e',
+                    borderRadius: 7
+                },
+                {
+                    label: 'Despesas',
+                    data: monthly.expenses,
+                    backgroundColor: '#df5967',
+                    borderRadius: 7
+                }
+            ]
+        },
+
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+
+            plugins: {
+                legend: {
+                    position: 'bottom'
+                },
+
+                tooltip: {
+                    callbacks: {
+                        label: context =>
+                            `${context.dataset.label}: ${brl(context.raw)}`
+                    }
+                }
+            },
+
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    ticks: {
+                        callback: value => brl(value)
+                    }
+                }
+            }
+        }
+    });
+
+    const categories = getCategoryData();
+
+    if (!categories.labels.length) {
+        categoryCanvas.parentElement.classList.add('hide');
+        categoryEmpty.classList.remove('hide');
+        return;
+    }
+
+    categoryCanvas.parentElement.classList.remove('hide');
+    categoryEmpty.classList.add('hide');
+
+    dashboardCharts.categories = new Chart(categoryCanvas, {
+        type: 'doughnut',
+
+        data: {
+            labels: categories.labels,
+
+            datasets: [{
+                data: categories.values,
+
+                backgroundColor: [
+                    '#079b7c',
+                    '#16c99e',
+                    '#f2b45b',
+                    '#df5967',
+                    '#6b8fd6',
+                    '#9674c8',
+                    '#53a6b5'
+                ],
+
+                borderWidth: 2,
+                borderColor: '#ffffff'
+            }]
+        },
+
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+
+            plugins: {
+                legend: {
+                    position: 'bottom'
+                },
+
+                tooltip: {
+                    callbacks: {
+                        label: context =>
+                            `${context.label}: ${brl(context.raw)}`
+                    }
+                }
+            }
+        }
+    });
+}
+
+
 function render() {
     if (!me) return;
 
@@ -427,15 +612,14 @@ function render() {
         conta: account
     };
 
+    destroyDashboardCharts();
+
     $('#content').innerHTML = pages[page]();
 
-    const search = $('#search');
-
-    if (search) {
-        search.value = searchTerm;
-        applySearch();
+    if (page === 'dashboard') {
+        renderDashboardCharts();
     }
-}
+} 
 
 function applySearch() {
     const query = normalize(searchTerm);
@@ -481,6 +665,36 @@ function dashboard() {
                 <div class="muted">Valores registrados</div>
             </article>
         </div>
+
+<div class="charts-grid">
+
+    <section class="chart-panel">
+        <div class="chart-header">
+            <h3>Receitas x Despesas</h3>
+            <p>Comparativo dos últimos seis meses</p>
+        </div>
+
+        <div class="chart-container">
+            <canvas id="monthlyChart"></canvas>
+        </div>
+    </section>
+
+    <section class="chart-panel">
+        <div class="chart-header">
+            <h3>Despesas por categoria</h3>
+            <p>Distribuição dos seus gastos</p>
+        </div>
+
+        <div class="chart-container">
+            <canvas id="categoryChart"></canvas>
+        </div>
+
+        <div id="categoryEmpty" class="chart-empty hide">
+            Nenhuma despesa cadastrada ainda.
+        </div>
+    </section>
+
+</div>
 
         <div class="dash-grid">
             <section class="panel">
