@@ -1,349 +1,203 @@
-# NIVIC-WEB
+# NIVIC
 
-Aplicação web de organização e gerenciamento financeiro pessoal, desenvolvida para facilitar o controle de receitas, despesas e metas financeiras.
+> Controle financeiro pessoal, simples e centralizado.
 
-O NIVIC é um projeto desenvolvido por Nicolas e Victor, com uma arquitetura que separa o frontend, o backend e a camada de persistência de dados.
+O **NIVIC** é uma aplicação web para organizar receitas, despesas e metas financeiras. Cada usuário tem sua própria conta e enxerga apenas os seus dados.
 
-O projeto utiliza Java e Spring Boot no backend, JavaScript no frontend e MariaDB como sistema de gerenciamento de banco de dados.
-
-## Sobre o projeto
-
-O NIVIC-WEB é a versão web do projeto NIVIC. Seu objetivo é oferecer uma aplicação para organizar informações financeiras e acompanhar a movimentação de dinheiro de maneira simples e centralizada.
-
-A aplicação possui uma estrutura dividida em três partes principais:
-
-- **Frontend:** responsável pela interface e pela interação com o usuário.
-- **Backend:** responsável pelas regras de negócio, processamento das requisições e comunicação com o banco de dados.
-- **Banco de dados:** responsável pelo armazenamento das informações.
-
-## Tecnologias utilizadas
-
-### Backend
-- Java 17
-- Spring Boot 3.5.16
-- Spring Web
-- Maven
-
-### Frontend
-- HTML5
-- CSS3
-- JavaScript
-
-### Banco de dados
-- MariaDB
-- JDBC
+Projeto escolar desenvolvido por **Nicolas** e **Victor**.
 
 ## Funcionalidades
 
-- Gerenciamento de informações financeiras.
-- Cadastro e organização de receitas.
-- Cadastro e organização de despesas.
-- Acompanhamento de movimentações financeiras.
-- Organização de metas financeiras.
-- Comunicação entre frontend e backend por meio de uma API.
+- Cadastro e login com senha protegida (BCrypt) e autenticação via JWT
+- Receitas e despesas: criar, listar, editar e excluir
+- Metas financeiras com barra de progresso e prazo
+- Dashboard com saldo, totais e movimentações recentes
+- Busca rápida nos lançamentos
+- Páginas de Termos de Uso e Política de Privacidade
 
-## Requisitos para executar o projeto
+## Tecnologias
 
-Antes de iniciar, certifique-se de que as seguintes ferramentas estão instaladas:
-
-| Ferramenta | Versão |
+| Camada | Tecnologias |
 |---|---|
-| Java JDK | 17 ou superior |
-| Apache Maven | 3.9 ou superior |
-| MariaDB | Versão compatível |
-| Git | Versão recente |
+| Backend | Java 17, Spring Boot 3.5, Spring Security, JdbcTemplate, Bean Validation, JJWT, Maven |
+| Frontend | HTML5, CSS3 e JavaScript (sem frameworks) |
+| Banco de dados | MariaDB |
 
-Para verificar se o Java está instalado:
+## Estrutura do projeto
 
-```bash
-java -version
+```text
+NIVIC-WEB/
+├── backend/
+│   ├── banco.sql                  # Criação do banco e das tabelas
+│   ├── pom.xml
+│   └── src/main/
+│       ├── java/com/nivic/
+│       │   ├── NivicApplication.java
+│       │   ├── controller/        # Rotas da API
+│       │   ├── dto/               # Objetos de entrada e validação
+│       │   ├── security/          # JWT, filtro de autenticação e CORS
+│       │   └── service/           # Regras de negócio (senha)
+│       └── resources/
+│           └── application.properties.example
+└── frontend/
+    ├── index.html
+    ├── script.js
+    ├── styles.css
+    ├── termos.html
+    └── privacidade.html
 ```
 
-Para verificar o Maven:
+## Como executar
 
-```bash
-mvn -version
-```
+### Pré-requisitos
 
-Para verificar o Git:
+- Java JDK 17 ou superior
+- Apache Maven 3.9 ou superior
+- MariaDB
+- Git
+- Uma forma de servir o frontend (ex.: extensão **Live Server** do VS Code)
 
-```bash
-git --version
-```
-
-Caso alguma dessas ferramentas não esteja instalada, será necessário instalá-la antes de continuar.
-
-## Instalação e configuração
-
-### 1. Clonando o repositório
-
-Primeiro, abra um terminal e escolha o diretório em que deseja armazenar o projeto.
-
-Execute:
+### 1. Clonar o repositório
 
 ```bash
 git clone https://github.com/FA1Y4Z/NIVIC-WEB.git
-```
-
-Entre na pasta do projeto:
-
-```bash
 cd NIVIC-WEB
 ```
 
-O comando `git clone` baixa os arquivos do repositório para o computador, permitindo executar e modificar o projeto localmente.
+### 2. Criar o banco de dados
 
-### 2. Configurando o banco de dados
-
-O NIVIC utiliza o MariaDB para armazenar suas informações.
-
-Inicie o serviço do MariaDB e acesse o terminal do banco:
+Crie o banco com suporte a acentos e rode o script de tabelas (ele pode ser executado mais de uma vez sem perder dados):
 
 ```bash
-mariadb -u root -p
+mariadb -u root -p -e "CREATE DATABASE IF NOT EXISTS nivic CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;"
+mariadb -u root -p < backend/banco.sql
 ```
 
-Depois de informar a senha, crie o banco de dados:
-
-```sql
-CREATE DATABASE nivic
-CHARACTER SET utf8mb4
-COLLATE utf8mb4_unicode_ci;
-```
-
-Selecione o banco:
-
-```sql
-USE nivic;
-```
-
-**Importante:** a criação do banco não cria automaticamente todas as tabelas necessárias. Caso o projeto disponibilize um script SQL de inicialização, execute esse script para criar a estrutura das tabelas antes de iniciar a aplicação.
-
-Não utilize dados de acesso de produção em um ambiente de desenvolvimento.
-
-### 3. Configurando a conexão com o banco
-
-O backend precisa das informações de acesso ao MariaDB para conseguir estabelecer uma conexão.
-
-Localize o arquivo de configuração de exemplo:
-
-```text
-src/main/resources/application.properties.example
-```
-
-Copie-o para:
-
-```text
-src/main/resources/application.properties
-```
-
-No Linux, por exemplo:
+### 3. Configurar a aplicação
 
 ```bash
-cp src/main/resources/application.properties.example src/main/resources/application.properties
+cp backend/src/main/resources/application.properties.example \
+   backend/src/main/resources/application.properties
 ```
 
-Abra o arquivo `application.properties` e configure os dados de conexão.
+O arquivo `application.properties` está no `.gitignore` e **não deve ser enviado ao GitHub**.
 
-Exemplo:
+Defina as variáveis de ambiente no mesmo terminal em que vai iniciar o backend:
 
-```properties
-spring.datasource.url=jdbc:mariadb://localhost:3306/nivic
-spring.datasource.username=${DB_USERNAME}
-spring.datasource.password=${DB_PASSWORD}
+| Variável | Descrição |
+|---|---|
+| `DB_USERNAME` | Usuário do MariaDB |
+| `DB_PASSWORD` | Senha do MariaDB |
+| `JWT_SECRET` | Chave de assinatura dos tokens. **Mínimo de 32 caracteres.** Sem ela, a aplicação não inicia. |
 
-spring.jpa.hibernate.ddl-auto=none
-```
-
-As variáveis `DB_USERNAME` e `DB_PASSWORD` representam o usuário e a senha do MariaDB.
-
-No Linux, elas podem ser configuradas no terminal:
+Linux / macOS:
 
 ```bash
 export DB_USERNAME=root
 export DB_PASSWORD=sua_senha
+export JWT_SECRET=$(openssl rand -base64 48)
 ```
 
-No Windows PowerShell:
+Windows (PowerShell):
 
 ```powershell
 $env:DB_USERNAME="root"
 $env:DB_PASSWORD="sua_senha"
+$env:JWT_SECRET="troque-por-uma-chave-longa-com-mais-de-32-caracteres"
 ```
 
-Substitua os valores pelos dados utilizados na instalação local do MariaDB.
+> Com `openssl rand`, a chave muda a cada terminal e os tokens antigos deixam de valer. Para desenvolvimento, isso não é problema.
 
-**Atenção:** não compartilhe senhas, não envie credenciais para o GitHub e não publique seu arquivo `application.properties` com informações privadas.
-
-### 4. Instalando as dependências
-
-Com o banco configurado, volte ao diretório principal do projeto, onde está localizado o arquivo `pom.xml`.
-
-Execute:
+### 4. Iniciar o backend
 
 ```bash
-mvn clean install
-```
-
-Esse comando realiza duas operações principais:
-
-- `clean`: remove arquivos gerados em compilações anteriores.
-- `install`: compila o projeto, executa as etapas de construção e disponibiliza o pacote no repositório local do Maven.
-
-O Maven também baixa automaticamente as dependências declaradas no `pom.xml`.
-
-É necessário ter conexão com a internet na primeira execução para baixar as dependências que ainda não estão disponíveis localmente.
-
-### 5. Executando o backend
-
-Depois da instalação das dependências, inicie a aplicação com:
-
-```bash
+cd backend
 mvn spring-boot:run
 ```
 
-O Spring Boot iniciará o servidor da aplicação.
+A API sobe em `http://localhost:8080`. Para conferir, acesse `http://localhost:8080/api`: deve aparecer **NIVIC API está funcionando!**
 
-Por padrão, o backend utiliza a porta `8080`.
+### 5. Abrir o frontend
 
-Quando a inicialização for concluída, o terminal deverá indicar que a aplicação está em execução.
+Abra a pasta `frontend/` no VS Code, clique com o botão direito em `index.html` e escolha **Open with Live Server**. Ele abre em `http://127.0.0.1:5500`.
 
-Para interromper o servidor, utilize:
+> O backend só aceita requisições (CORS) de origens listadas em `backend/src/main/java/com/nivic/security/SecurityConfig.java`. Se você usar outro endereço ou porta, adicione-o à lista.
 
-```text
-CTRL + C
+## API
+
+Todas as rotas `/api/**` exigem o cabeçalho `Authorization: Bearer <token>`, exceto as marcadas como públicas.
+
+| Método | Rota | Descrição | Acesso |
+|---|---|---|---|
+| GET | `/api` | Verifica se a API está no ar | Público |
+| POST | `/api/usuarios` | Cadastra um usuário | Público |
+| POST | `/api/auth/login` | Faz login e retorna o token | Público |
+| GET | `/api/usuarios/me` | Dados do usuário logado | Autenticado |
+| GET / POST | `/api/receitas` | Lista / cria receitas | Autenticado |
+| GET / PUT / DELETE | `/api/receitas/{id}` | Busca / edita / exclui uma receita | Autenticado |
+| GET / POST | `/api/despesas` | Lista / cria despesas | Autenticado |
+| GET / PUT / DELETE | `/api/despesas/{id}` | Busca / edita / exclui uma despesa | Autenticado |
+| GET / POST | `/api/metas` | Lista / cria metas | Autenticado |
+| GET / PUT / DELETE | `/api/metas/{id}` | Busca / edita / exclui uma meta | Autenticado |
+
+### Exemplo de uso
+
+Cadastro:
+
+```bash
+curl -X POST http://localhost:8080/api/usuarios \
+  -H "Content-Type: application/json" \
+  -d '{"nome":"Maria Silva","email":"maria@email.com","senha":"minhasenha123"}'
 ```
 
-### 6. Verificando o funcionamento da API
+Login (retorna o `token`):
 
-Com o backend iniciado, abra o navegador e acesse:
-
-```text
-http://localhost:8080/api
+```bash
+curl -X POST http://localhost:8080/api/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{"email":"maria@email.com","senha":"minhasenha123"}'
 ```
 
-A API deverá retornar:
+Criar uma despesa:
 
-```text
-NIVIC API está funcionando!
+```bash
+curl -X POST http://localhost:8080/api/despesas \
+  -H "Authorization: Bearer SEU_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"descricao":"Mercado","valor":89.90,"categoria":"Alimentação","data":"2026-11-24"}'
 ```
 
-Essa resposta indica que o servidor está ativo e que a rota de verificação está respondendo.
+### Regras de validação
 
-### 7. Executando o frontend
+- **Senha:** de 8 a 72 caracteres
+- **Valores:** maiores que zero, com até 2 casas decimais
+- **Metas:** `valorObjetivo` maior que zero, `valorAtual` maior ou igual a zero e `dataLimite` obrigatória
+- **Token:** expira em 1 hora
 
-O frontend é composto por HTML, CSS e JavaScript.
+## Segurança
 
-Caso os arquivos estejam configurados dentro do diretório de recursos estáticos do Spring Boot, normalmente em:
-
-```text
-src/main/resources/static/
-```
-
-eles poderão ser servidos pelo próprio backend.
-
-Nesse caso, acesse:
-
-```text
-http://localhost:8080
-```
-
-Se o frontend estiver separado do backend, será necessário abrir o arquivo HTML por um servidor local, como a extensão Live Server do Visual Studio Code, e garantir que as requisições JavaScript apontem para o endereço correto da API.
-
-Por exemplo:
-
-```javascript
-const API_URL = "http://localhost:8080";
-```
-
-A URL utilizada deve corresponder à configuração real do backend.
-
-## Estrutura geral da aplicação
-
-O projeto segue uma organização baseada na separação de responsabilidades.
-
-```text
-NIVIC-WEB/
-│
-├── src/
-│   └── main/
-│       ├── java/
-│       │   └── ...
-│       │
-│       └── resources/
-│           ├── application.properties
-│           └── static/
-│               └── ...
-│
-├── pom.xml
-├── README.md
-└── ...
-```
-
-A estrutura acima representa uma organização geral de referência. Os diretórios e arquivos podem variar conforme a implementação atual do projeto.
+- Senhas armazenadas com hash BCrypt, nunca em texto puro
+- Consultas SQL parametrizadas (proteção contra SQL Injection)
+- Cada registro é filtrado pelo usuário do token: ninguém acessa dados de outra conta
+- Conteúdo dinâmico escapado no frontend (proteção contra XSS)
+- Credenciais e chaves lidas de variáveis de ambiente
 
 ## Problemas comuns
 
-### Erro de conexão com o MariaDB
+| Problema | O que verificar |
+|---|---|
+| A aplicação não inicia e reclama de `JWT_SECRET` | A variável precisa existir no mesmo terminal e ter 32 caracteres ou mais |
+| Erro de conexão com o MariaDB | Serviço ativo, banco `nivic` criado, usuário/senha corretos e porta `3306` |
+| Porta `8080` em uso | Encerre o outro processo ou altere `server.port` no `application.properties` |
+| O frontend não conecta à API (erro de CORS ou "não foi possível conectar") | Backend rodando e origem do frontend listada no `SecurityConfig` |
+| `mvn` não encontra o `pom.xml` | Execute os comandos dentro da pasta `backend/` |
+| Erro 401 após algum tempo | O token expirou; faça login novamente |
 
-Verifique:
+## Autores
 
-- Se o serviço do MariaDB está em execução.
-- Se o banco `nivic` foi criado.
-- Se o usuário e a senha estão corretos.
-- Se a porta utilizada é a `3306`.
-- Se as variáveis `DB_USERNAME` e `DB_PASSWORD` foram configuradas no mesmo terminal em que o backend será iniciado.
+- **Nicolas**
+- **Victor**
 
-### Erro de porta em uso
+## Licença
 
-Se a porta `8080` já estiver sendo utilizada por outro processo, o Spring Boot não conseguirá iniciar normalmente.
-
-Verifique qual processo está utilizando a porta e encerre-o ou configure outra porta para a aplicação.
-
-### Erro ao executar o Maven
-
-Verifique se o Java e o Maven estão instalados corretamente:
-
-```bash
-java -version
-mvn -version
-```
-
-Também confira se o terminal está aberto no diretório que contém o arquivo `pom.xml`.
-
-### Erro 404 ao acessar uma rota
-
-Um erro 404 significa que o servidor recebeu a requisição, mas não encontrou uma rota correspondente ao endereço solicitado.
-
-Verifique se a URL está correta e se o endpoint está implementado no backend.
-
-## Desenvolvimento e colaboração
-
-O projeto é desenvolvido em colaboração entre Nicolas e Victor.
-
-As alterações são versionadas utilizando Git e armazenadas no GitHub.
-
-Para atualizar sua cópia local:
-
-```bash
-git pull origin main
-```
-
-Para enviar alterações:
-
-```bash
-git add .
-git commit -m "Descrição das alterações"
-git push origin main
-```
-
-Antes de enviar alterações, confira os arquivos modificados e evite adicionar arquivos de configuração que contenham senhas ou outras informações privadas.
-
-## Desenvolvedores
-
-- **Nicolas** — Desenvolvimento.
-- **Victor** — Desenvolvimento.
-
-## Repositório
-
-[FA1Y4Z/NIVIC-WEB](https://github.com/FA1Y4Z/NIVIC-WEB)
+Projeto desenvolvido para fins educacionais.
