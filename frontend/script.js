@@ -1,4 +1,16 @@
-const API_URL = 'http://localhost:8080';
+const API_URL = (() => {
+    if (window.NIVIC_API_URL) return window.NIVIC_API_URL;
+
+    const host = location.hostname;
+    const isLocal =
+        host === 'localhost' ||
+        host === '127.0.0.1' ||
+        /^192\.168\./.test(host) ||
+        /^10\./.test(host);
+
+    return isLocal ? `http://${host}:8080` : '';
+})();
+
 const TOKEN_KEY = 'nivic_token';
 
 const $ = (selector) => document.querySelector(selector);
@@ -28,12 +40,22 @@ const esc = (value) =>
         "'": '&#39;'
     })[character]);
 
+const normalize = (value) =>
+    String(value ?? '')
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '')
+        .toLowerCase();
+
+const byteLength = (value) => new TextEncoder().encode(value).length;
+
 let token = sessionStorage.getItem(TOKEN_KEY);
 let me = null;
 let page = 'dashboard';
 let editing = null;
+let searchTerm = '';
+let lastFocusedElement = null;
 
-let data = {
+let store = {
     receitas: [],
     despesas: [],
     metas: []
@@ -56,7 +78,7 @@ async function api(path, options = {}) {
         });
     } catch (error) {
         throw new Error(
-            'Não foi possível conectar ao servidor. Verifique se o Spring Boot está executando.'
+            'Não foi possível conectar ao servidor. Verifique sua conexão e tente novamente.'
         );
     }
 
@@ -78,30 +100,30 @@ async function api(path, options = {}) {
             throw new Error('Sessão expirada. Faça login novamente.');
         }
 
-        let message = 'Erro na comunicação com o servidor.';
+        let message = '';
 
         if (typeof result === 'string' && result.trim()) {
             message = result;
         } else if (result?.erro) {
             message = result.erro;
-        } else if (result?.message) {
-            message = result.message;
         } else if (result?.mensagem) {
             message = result.mensagem;
+        } else if (result?.message) {
+            message = result.message;
         } else if (result?.detail) {
             message = result.detail;
         }
 
-        if (response.status === 400) {
-            message = result?.erro || 'Dados inválidos. Confira os campos preenchidos.';
-        }
-
-        if (response.status === 404) {
-            message = 'Registro ou rota não encontrado.';
-        }
-
-        if (response.status === 409) {
-            message = result?.erro || 'Este cadastro já existe.';
+        if (!message) {
+            if (response.status === 400) {
+                message = 'Dados inválidos. Confira os campos preenchidos.';
+            } else if (response.status === 404) {
+                message = 'Registro ou rota não encontrado.';
+            } else if (response.status === 409) {
+                message = 'Este cadastro já existe.';
+            } else {
+                message = 'Erro na comunicação com o servidor.';
+            }
         }
 
         throw new Error(message);
@@ -113,19 +135,29 @@ async function api(path, options = {}) {
 function clearSession() {
     token = null;
     me = null;
+    searchTerm = '';
 
     sessionStorage.removeItem(TOKEN_KEY);
 
-    data = {
+    store = {
         receitas: [],
         despesas: [],
         metas: []
     };
 }
 
+function showLanding() {
+    $('#landing').classList.remove('hide');
+    $('#auth').classList.add('hide');
+    $('#application').classList.add('hide');
+    $('#modal').classList.add('hide');
+    window.scrollTo(0, 0);
+}
+
 function auth(mode) {
     const login = mode === 'login';
 
+    $('#landing').classList.add('hide');
     $('#auth').classList.remove('hide');
     $('#application').classList.add('hide');
     $('#modal').classList.add('hide');
@@ -141,24 +173,47 @@ function auth(mode) {
         : 'Crie sua conta e organize<br>suas finanças.';
 
     $('#switch').innerHTML = login
-        ? 'Não tem uma conta? <button type="button" id="toRegister">Cadastre-se</button>'
-        : 'Já tem uma conta? <button type="button" id="toLogin">Faça login</button>';
+        ? 'Não tem uma conta? <button type="button" data-auth="register">Cadastre-se</button>'
+        : 'Já tem uma conta? <button type="button" data-auth="login">Faça login</button>';
 
-    $('#toRegister')?.addEventListener('click', () => auth('register'));
-    $('#toLogin')?.addEventListener('click', () => auth('login'));
+    window.scrollTo(0, 0);
 }
 
 function enter(user) {
     me = user;
 
+    const name = String(me?.nome || '').trim() || 'Usuário';
+
+    $('#landing').classList.add('hide');
     $('#auth').classList.add('hide');
     $('#application').classList.remove('hide');
 
-    $('#userName').textContent = me.nome;
-    $('#avatar').textContent = me.nome.trim()[0].toUpperCase();
+    $('#userName').textContent = name;
+    $('#avatar').textContent = name[0].toUpperCase();
 
     go('dashboard');
 }
+
+$('#switch').addEventListener('click', (event) => {
+    const button = event.target.closest('button[data-auth]');
+
+    if (button) auth(button.dataset.auth);
+});
+
+$('#openLogin').addEventListener('click', () => auth('login'));
+$('#openRegister').addEventListener('click', () => auth('register'));
+$('#heroRegister').addEventListener('click', () => auth('register'));
+$('#bottomRegister').addEventListener('click', () => auth('register'));
+$('#backToSite').addEventListener('click', showLanding);
+
+$('#authBrand').addEventListener('click', (event) => {
+    event.preventDefault();
+    showLanding();
+});
+
+const currentYear = new Date().getFullYear();
+$('#year').textContent = currentYear;
+$('#appYear').textContent = currentYear;
 
 async function loadUserAndData() {
     const [user, receitas, despesas, metas] = await Promise.all([
@@ -169,9 +224,9 @@ async function loadUserAndData() {
     ]);
 
     me = user;
-    data.receitas = receitas;
-    data.despesas = despesas;
-    data.metas = metas;
+    store.receitas = receitas;
+    store.despesas = despesas;
+    store.metas = metas;
 }
 
 async function refreshData() {
@@ -181,9 +236,9 @@ async function refreshData() {
         api('/api/metas')
     ]);
 
-    data.receitas = receitas;
-    data.despesas = despesas;
-    data.metas = metas;
+    store.receitas = receitas;
+    store.despesas = despesas;
+    store.metas = metas;
 }
 
 $('#loginForm').addEventListener('submit', async (event) => {
@@ -191,7 +246,7 @@ $('#loginForm').addEventListener('submit', async (event) => {
 
     $('#loginError').textContent = '';
 
-    const button = $('#loginForm button');
+    const button = $('#loginForm button[type="submit"]');
     button.disabled = true;
 
     try {
@@ -209,6 +264,7 @@ $('#loginForm').addEventListener('submit', async (event) => {
         await loadUserAndData();
         enter(me);
 
+        $('#loginForm').reset();
         notify('Login realizado com sucesso!');
     } catch (error) {
         $('#loginError').textContent = error.message;
@@ -227,6 +283,11 @@ $('#registerForm').addEventListener('submit', async (event) => {
     const senha = $('#regPass').value;
     const confirmacao = $('#regConfirm').value;
 
+    if (!nome) {
+        $('#regError').textContent = 'Informe seu nome completo.';
+        return;
+    }
+
     if (senha !== confirmacao) {
         $('#regError').textContent = 'As senhas não coincidem.';
         return;
@@ -237,12 +298,19 @@ $('#registerForm').addEventListener('submit', async (event) => {
         return;
     }
 
-    if (senha.length > 72) {
-        $('#regError').textContent = 'A senha deve ter no máximo 72 caracteres.';
+    if (byteLength(senha) > 72) {
+        $('#regError').textContent =
+            'A senha é muito longa (máximo de 72 bytes; acentos e emojis contam mais).';
         return;
     }
 
-    const button = $('#registerForm button');
+    if (!$('#acceptTerms').checked) {
+        $('#regError').textContent =
+            'Você precisa aceitar os Termos de Uso e a Política de Privacidade.';
+        return;
+    }
+
+    const button = $('#registerForm button[type="submit"]');
     button.disabled = true;
 
     try {
@@ -262,6 +330,7 @@ $('#registerForm').addEventListener('submit', async (event) => {
         await loadUserAndData();
         enter(me);
 
+        $('#registerForm').reset();
         notify('Conta criada com sucesso!');
     } catch (error) {
         $('#regError').textContent = error.message;
@@ -270,12 +339,17 @@ $('#registerForm').addEventListener('submit', async (event) => {
     }
 });
 
-$('#logout').addEventListener('click', () => {
+function logout() {
     clearSession();
     auth('login');
+
     $('#loginForm').reset();
+    $('#registerForm').reset();
+
     notify('Você saiu da sua conta.');
-});
+}
+
+$('#logout').addEventListener('click', logout);
 
 all('[data-page]').forEach(button => {
     button.addEventListener('click', () => {
@@ -284,6 +358,8 @@ all('[data-page]').forEach(button => {
 });
 
 function go(p) {
+    if (p !== page) searchTerm = '';
+
     page = p;
 
     const names = {
@@ -304,12 +380,12 @@ function go(p) {
 }
 
 function totals() {
-    const inc = data.receitas.reduce(
+    const inc = store.receitas.reduce(
         (sum, item) => sum + Number(item.valor || 0),
         0
     );
 
-    const out = data.despesas.reduce(
+    const out = store.despesas.reduce(
         (sum, item) => sum + Number(item.valor || 0),
         0
     );
@@ -352,21 +428,37 @@ function render() {
     };
 
     $('#content').innerHTML = pages[page]();
+
+    const search = $('#search');
+
+    if (search) {
+        search.value = searchTerm;
+        applySearch();
+    }
+}
+
+function applySearch() {
+    const query = normalize(searchTerm);
+
+    all('#tbody tr[data-q]').forEach(row => {
+        row.classList.toggle('hide', !row.dataset.q.includes(query));
+    });
 }
 
 function dashboard() {
     const t = totals();
+    const firstName = esc(String(me.nome || 'Usuário').trim().split(' ')[0]);
 
     const movements = [
-        ...data.receitas.map(item => ({ ...item, kind: 'Receita' })),
-        ...data.despesas.map(item => ({ ...item, kind: 'Despesa' }))
+        ...store.receitas.map(item => ({ ...item, kind: 'Receita' })),
+        ...store.despesas.map(item => ({ ...item, kind: 'Despesa' }))
     ]
         .sort((a, b) => String(b.data).localeCompare(String(a.data)))
         .slice(0, 5);
 
     return `
         <div class="welcome">
-            <h2>Olá, ${esc(me.nome.split(' ')[0])}!</h2>
+            <h2>Olá, ${firstName}!</h2>
             <p>Seja bem-vindo(a) ao NIVIC. Aqui está um resumo da sua vida financeira.</p>
         </div>
 
@@ -415,8 +507,8 @@ function dashboard() {
             <section class="panel">
                 <h3>Resumo das metas</h3>
 
-                ${data.metas.length
-                    ? data.metas.slice(0, 4).map(goal => `
+                ${store.metas.length
+                    ? store.metas.slice(0, 4).map(goal => `
                         <div class="goal-mini">
                             <span>${esc(goal.nome)}</span>
                             <b>${pct(goal)}%</b>
@@ -435,7 +527,7 @@ function dashboard() {
 
 function list(type) {
     const income = type === 'receitas';
-    const items = data[type];
+    const items = store[type];
 
     return `
         <div class="page-head">
@@ -450,10 +542,12 @@ function list(type) {
         </div>
 
         <div class="toolbar">
+            <label class="sr-only" for="search">Buscar lançamentos</label>
             <input
                 id="search"
                 class="search"
                 placeholder="⌕ Buscar por descrição ou ID..."
+                autocomplete="off"
             >
         </div>
 
@@ -477,7 +571,7 @@ function list(type) {
 
                             return `
                                 <tr data-q="${esc(
-                                    `${item.id} ${item.descricao} ${detail || ''}`.toLowerCase()
+                                    normalize(`${item.id} ${item.descricao} ${detail || ''}`)
                                 )}">
                                     <td>#${item.id}</td>
                                     <td>${esc(item.descricao)}</td>
@@ -517,10 +611,10 @@ function goals() {
             </button>
         </div>
 
-        ${data.metas.length
+        ${store.metas.length
             ? `
                 <div class="goal-grid">
-                    ${data.metas.map(goal => `
+                    ${store.metas.map(goal => `
                         <article class="goal">
                             <div class="goal-top">
                                 <h3>${esc(goal.nome)}</h3>
@@ -583,17 +677,17 @@ function account() {
                 <h3>Dados pessoais</h3>
 
                 <div class="field">
-                    <label>Nome completo</label>
-                    <input value="${esc(me.nome)}" disabled>
+                    <label for="accName">Nome completo</label>
+                    <input id="accName" value="${esc(me.nome)}" disabled>
                 </div>
 
                 <div class="field">
-                    <label>E-mail</label>
-                    <input value="${esc(me.email)}" disabled>
+                    <label for="accEmail">E-mail</label>
+                    <input id="accEmail" value="${esc(me.email)}" disabled>
                 </div>
 
                 <p class="muted">
-                    A edição dos dados pessoais ainda não está disponível na API.
+                    A edição dos dados pessoais ainda não está disponível.
                 </p>
             </section>
 
@@ -605,7 +699,7 @@ function account() {
                     O token é removido ao encerrar a sessão.
                 </p>
 
-                <button class="secondary" id="accountLogout">
+                <button class="secondary" id="accountLogout" style="margin-top:16px">
                     Encerrar sessão
                 </button>
             </section>
@@ -619,6 +713,8 @@ function openModal(type, item = null) {
         id: item ? Number(item.id) : null
     };
 
+    lastFocusedElement = document.activeElement;
+
     const goal = type === 'metas';
     const income = type === 'receitas';
 
@@ -631,8 +727,9 @@ function openModal(type, item = null) {
     if (goal) {
         fields = `
             <div class="field">
-                <label>Nome da meta</label>
+                <label for="f-nome">Nome da meta</label>
                 <input
+                    id="f-nome"
                     name="nome"
                     required
                     value="${esc(item?.nome || '')}"
@@ -641,8 +738,9 @@ function openModal(type, item = null) {
             </div>
 
             <div class="field">
-                <label>Valor desejado (R$)</label>
+                <label for="f-valor">Valor desejado (R$)</label>
                 <input
+                    id="f-valor"
                     name="valor"
                     type="number"
                     min="0.01"
@@ -653,8 +751,9 @@ function openModal(type, item = null) {
             </div>
 
             <div class="field">
-                <label>Valor acumulado (R$)</label>
+                <label for="f-acumulado">Valor acumulado (R$)</label>
                 <input
+                    id="f-acumulado"
                     name="acumulado"
                     type="number"
                     min="0"
@@ -665,8 +764,9 @@ function openModal(type, item = null) {
             </div>
 
             <div class="field">
-                <label>Prazo</label>
+                <label for="f-prazo">Prazo</label>
                 <input
+                    id="f-prazo"
                     name="prazo"
                     type="date"
                     required
@@ -677,8 +777,9 @@ function openModal(type, item = null) {
     } else {
         fields = `
             <div class="field">
-                <label>Descrição</label>
+                <label for="f-descricao">Descrição</label>
                 <input
+                    id="f-descricao"
                     name="descricao"
                     required
                     value="${esc(item?.descricao || '')}"
@@ -687,8 +788,9 @@ function openModal(type, item = null) {
             </div>
 
             <div class="field">
-                <label>Valor (R$)</label>
+                <label for="f-valor">Valor (R$)</label>
                 <input
+                    id="f-valor"
                     name="valor"
                     type="number"
                     min="0.01"
@@ -699,8 +801,9 @@ function openModal(type, item = null) {
             </div>
 
             <div class="field">
-                <label>${income ? 'Tipo da receita' : 'Categoria da despesa'}</label>
+                <label for="f-detalhe">${income ? 'Tipo da receita' : 'Categoria da despesa'}</label>
                 <input
+                    id="f-detalhe"
                     name="${income ? 'tipo' : 'categoria'}"
                     required
                     value="${esc(income ? item?.tipo || '' : item?.categoria || '')}"
@@ -709,8 +812,9 @@ function openModal(type, item = null) {
             </div>
 
             <div class="field">
-                <label>Data</label>
+                <label for="f-data">Data</label>
                 <input
+                    id="f-data"
                     name="data"
                     type="date"
                     required
@@ -723,16 +827,58 @@ function openModal(type, item = null) {
     $('#modalFields').innerHTML = fields;
     $('#modalError').textContent = '';
     $('#modal').classList.remove('hide');
+
+    $('#modalFields input')?.focus();
 }
 
 function closeModal() {
     $('#modal').classList.add('hide');
     $('#recordForm').reset();
     editing = null;
+
+    if (lastFocusedElement && document.contains(lastFocusedElement)) {
+        lastFocusedElement.focus();
+    }
+
+    lastFocusedElement = null;
 }
 
 $('#close').addEventListener('click', closeModal);
 $('#cancel').addEventListener('click', closeModal);
+
+$('#modal').addEventListener('mousedown', (event) => {
+    if (event.target === $('#modal')) closeModal();
+});
+
+document.addEventListener('keydown', (event) => {
+    if ($('#modal').classList.contains('hide')) return;
+
+    if ($('#nivic-confirm-overlay')) return;
+
+    if (event.key === 'Escape') {
+        closeModal();
+        return;
+    }
+
+    if (event.key === 'Tab') {
+        const focusable = all(
+            '#recordForm input:not([disabled]), #recordForm button:not([disabled])'
+        );
+
+        if (!focusable.length) return;
+
+        const first = focusable[0];
+        const last = focusable[focusable.length - 1];
+
+        if (event.shiftKey && document.activeElement === first) {
+            event.preventDefault();
+            last.focus();
+        } else if (!event.shiftKey && document.activeElement === last) {
+            event.preventDefault();
+            first.focus();
+        }
+    }
+});
 
 $('#recordForm').addEventListener('submit', async (event) => {
     event.preventDefault();
@@ -777,6 +923,8 @@ $('#recordForm').addEventListener('submit', async (event) => {
     if (type === 'metas') {
         if (
             !body.nome ||
+            !Number.isFinite(body.valorObjetivo) ||
+            !Number.isFinite(body.valorAtual) ||
             body.valorObjetivo <= 0 ||
             body.valorAtual < 0 ||
             !body.dataLimite
@@ -835,16 +983,14 @@ $('#content').addEventListener('click', async (event) => {
     }
 
     if (button.id === 'accountLogout') {
-        clearSession();
-        auth('login');
-        notify('Você saiu da sua conta.');
+        logout();
         return;
     }
 
     if (button.dataset.edit) {
         const type = button.dataset.type;
 
-        const item = data[type].find(
+        const item = store[type].find(
             entry => Number(entry.id) === Number(button.dataset.edit)
         );
 
@@ -882,11 +1028,8 @@ $('#content').addEventListener('click', async (event) => {
 $('#content').addEventListener('input', (event) => {
     if (event.target.id !== 'search') return;
 
-    const query = event.target.value.toLowerCase();
-
-    all('#tbody tr[data-q]').forEach(row => {
-        row.classList.toggle('hide', !row.dataset.q.includes(query));
-    });
+    searchTerm = event.target.value;
+    applySearch();
 });
 
 function confirmAction(title, message) {
@@ -899,7 +1042,7 @@ function confirmAction(title, message) {
         overlay.id = 'nivic-confirm-overlay';
 
         overlay.innerHTML = `
-            <div class="nivic-confirm-card" role="dialog" aria-modal="true" aria-labelledby="nivic-confirm-title">
+            <div class="nivic-confirm-card" role="alertdialog" aria-modal="true" aria-labelledby="nivic-confirm-title">
                 <div class="nivic-confirm-icon">!</div>
                 <h3 id="nivic-confirm-title">${esc(title)}</h3>
                 <p>${esc(message)}</p>
@@ -915,135 +1058,6 @@ function confirmAction(title, message) {
                 </div>
             </div>
         `;
-
-        if (!$('#nivic-confirm-styles')) {
-            const style = document.createElement('style');
-            style.id = 'nivic-confirm-styles';
-
-            style.textContent = `
-                #nivic-confirm-overlay {
-                    position: fixed;
-                    inset: 0;
-                    z-index: 9999;
-                    display: grid;
-                    place-items: center;
-                    padding: 20px;
-                    background: rgba(3, 30, 43, .58);
-                    backdrop-filter: blur(5px);
-                    animation: nivicConfirmFade .18s ease;
-                }
-
-                .nivic-confirm-card {
-                    width: min(100%, 400px);
-                    padding: 28px;
-                    border: 1px solid rgba(6, 43, 56, .08);
-                    border-radius: 18px;
-                    background: #fff;
-                    color: #173746;
-                    box-shadow: 0 24px 70px rgba(3, 30, 43, .24);
-                    text-align: center;
-                    animation: nivicConfirmEnter .2s ease;
-                }
-
-                .nivic-confirm-icon {
-                    display: grid;
-                    place-items: center;
-                    width: 48px;
-                    height: 48px;
-                    margin: 0 auto 16px;
-                    border-radius: 50%;
-                    background: #fff0ed;
-                    color: #d94b3d;
-                    font-size: 25px;
-                    font-weight: 700;
-                }
-
-                .nivic-confirm-card h3 {
-                    margin: 0 0 9px;
-                    color: #062b38;
-                    font-size: 19px;
-                }
-
-                .nivic-confirm-card p {
-                    margin: 0;
-                    color: #647780;
-                    font-size: 14px;
-                    line-height: 1.6;
-                }
-
-                .nivic-confirm-actions {
-                    display: flex;
-                    justify-content: center;
-                    gap: 10px;
-                    margin-top: 25px;
-                }
-
-                .nivic-confirm-actions button {
-                    min-height: 42px;
-                    padding: 0 18px;
-                    border: 0;
-                    border-radius: 9px;
-                    font: inherit;
-                    font-size: 14px;
-                    font-weight: 600;
-                    cursor: pointer;
-                    transition: .18s ease;
-                }
-
-                .nivic-confirm-cancel {
-                    background: #edf2f3;
-                    color: #294650;
-                }
-
-                .nivic-confirm-cancel:hover {
-                    background: #e1e9eb;
-                }
-
-                .nivic-confirm-delete {
-                    background: #d94b3d;
-                    color: #fff;
-                }
-
-                .nivic-confirm-delete:hover {
-                    background: #bd392e;
-                }
-
-                @keyframes nivicConfirmFade {
-                    from {
-                        opacity: 0;
-                    }
-
-                    to {
-                        opacity: 1;
-                    }
-                }
-
-                @keyframes nivicConfirmEnter {
-                    from {
-                        opacity: 0;
-                        transform: translateY(8px) scale(.98);
-                    }
-
-                    to {
-                        opacity: 1;
-                        transform: translateY(0) scale(1);
-                    }
-                }
-
-                @media (max-width: 420px) {
-                    .nivic-confirm-card {
-                        padding: 24px 19px;
-                    }
-
-                    .nivic-confirm-actions button {
-                        flex: 1;
-                        padding: 0 12px;
-                    }
-                }
-            `;
-
-            document.head.appendChild(style);
-        }
 
         document.body.appendChild(overlay);
 
@@ -1077,20 +1091,24 @@ function confirmAction(title, message) {
     });
 }
 
+let toastTimer = null;
+
 function notify(message) {
     const element = $('#toast');
 
     element.textContent = message;
     element.classList.add('show');
 
-    setTimeout(() => {
+    clearTimeout(toastTimer);
+
+    toastTimer = setTimeout(() => {
         element.classList.remove('show');
     }, 2600);
 }
 
 async function initialize() {
     if (!token) {
-        auth('login');
+        showLanding();
         return;
     }
 

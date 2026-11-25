@@ -1,291 +1,161 @@
-
 <!DOCTYPE html>
 <html lang="pt-BR">
-
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-    <meta name="theme-color" content="#062b38">
-    <meta name="description" content="NIVIC: organize suas receitas, despesas e metas financeiras em um só lugar.">
-
-    <title>NIVIC | Organização Financeira</title>
-
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-
-    <link
-        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap"
-        rel="stylesheet"
-    >
-
-    <link rel="stylesheet" href="styles.css">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#062b38">
+  <meta name="description" content="NIVIC — organize receitas, despesas e metas financeiras em um só lugar.">
+  <meta name="robots" content="index,follow">
+  <title>NIVIC — Sua vida financeira em perspectiva</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&family=Manrope:wght@500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
 </head>
-
 <body>
+  <section id="landing" class="landing">
+    <nav class="site-nav">
+      <a class="brand" href="#inicio" aria-label="NIVIC início"><span class="brand-mark">◈</span> NIVIC</a>
+      <div class="nav-links">
+        <a href="#recursos">Recursos</a>
+        <a href="#sobre">Sobre</a>
+        <a href="privacidade.html">Privacidade</a>
+      </div>
+      <div class="nav-actions">
+        <button class="nav-login" id="openLogin" type="button">Entrar</button>
+        <button class="nav-cta" id="openRegister" type="button">Criar conta <span>↗</span></button>
+      </div>
+    </nav>
 
-    <!-- AUTENTICAÇÃO -->
-
-    <section id="auth" class="auth">
-
-        <div class="auth-card">
-
-            <div class="logo">
-                <b>◈</b> NIVIC
-            </div>
-
-            <p id="authText">
-                Seu controle financeiro,<br>
-                mais simples.
-            </p>
-
-            <!-- LOGIN -->
-
-            <form id="loginForm">
-
-                <label class="sr-only" for="loginEmail">E-mail</label>
-                <input
-                    id="loginEmail"
-                    type="email"
-                    placeholder="E-mail"
-                    autocomplete="email"
-                    required
-                >
-
-                <label class="sr-only" for="loginPass">Senha</label>
-                <input
-                    id="loginPass"
-                    type="password"
-                    placeholder="Senha"
-                    autocomplete="current-password"
-                    required
-                >
-
-                <p class="error" id="loginError" role="alert" aria-live="polite"></p>
-
-                <button class="primary" type="submit">
-                    Entrar
-                </button>
-
-            </form>
-
-            <!-- CADASTRO -->
-
-            <form id="registerForm" class="hide">
-
-                <label class="sr-only" for="regName">Nome completo</label>
-                <input
-                    id="regName"
-                    type="text"
-                    placeholder="Nome completo"
-                    autocomplete="name"
-                    required
-                >
-
-                <label class="sr-only" for="regEmail">E-mail</label>
-                <input
-                    id="regEmail"
-                    type="email"
-                    placeholder="E-mail"
-                    autocomplete="email"
-                    required
-                >
-
-                <label class="sr-only" for="regPass">Senha</label>
-                <input
-                    id="regPass"
-                    type="password"
-                    placeholder="Senha (mínimo 6 caracteres)"
-                    minlength="6"
-                    autocomplete="new-password"
-                    required
-                >
-
-                <label class="sr-only" for="regConfirm">Confirmar senha</label>
-                <input
-                    id="regConfirm"
-                    type="password"
-                    placeholder="Confirmar senha"
-                    minlength="6"
-                    autocomplete="new-password"
-                    required
-                >
-
-                <p class="error" id="regError" role="alert" aria-live="polite"></p>
-
-                <button class="primary" type="submit">
-                    Criar minha conta
-                </button>
-
-            </form>
-
-            <p class="switch" id="switch">
-                Não tem uma conta?
-                <button type="button" id="toRegister">
-                    Cadastre-se
-                </button>
-            </p>
-
+    <main id="inicio">
+      <section class="hero">
+        <div class="hero-copy">
+          <span class="eyebrow"><i></i> ORGANIZAÇÃO FINANCEIRA SEM COMPLICAÇÃO</span>
+          <h1>Seu dinheiro.<br><em>Mais clareza.</em><br>Mais possibilidades.</h1>
+          <p>Uma visão simples da sua vida financeira. Registre o que entra, acompanhe o que sai e transforme planos em metas.</p>
+          <div class="hero-actions">
+            <button class="nav-cta hero-cta" id="heroRegister" type="button">Começar agora <span>↗</span></button>
+            <a class="text-link" href="#recursos">Conhecer a plataforma <span>↓</span></a>
+          </div>
+          <div class="hero-note"><span class="note-check">✓</span> Controle organizado em um só lugar</div>
         </div>
-
-    </section>
-
-    <!-- APLICAÇÃO -->
-
-    <section id="application" class="hide app">
-
-        <!-- MENU LATERAL -->
-
-        <aside class="sidebar">
-
-            <div class="logo">
-                <b>◈</b> NIVIC
+        <div class="hero-visual" aria-label="Prévia ilustrativa do painel financeiro NIVIC">
+          <div class="visual-glow"></div>
+          <div class="mock-window">
+            <div class="mock-top"><div class="mock-dots"><i></i><i></i><i></i></div><span>VISÃO GERAL</span><b>◈ NIVIC</b></div>
+            <div class="mock-content">
+              <div class="mock-greeting"><small>SEU RESUMO FINANCEIRO</small><strong>Uma visão do todo.</strong></div>
+              <div class="mock-balance"><small>Saldo disponível</small><strong>R$ 2.840,50</strong><span>Prévia ilustrativa</span></div>
+              <div class="mock-stats">
+                <div><small>Receitas</small><b class="mock-green">R$ 4.200,00</b></div>
+                <div><small>Despesas</small><b>R$ 1.359,50</b></div>
+              </div>
+              <div class="mock-chart"><div class="chart-head"><b>Movimentação</b><small>Exemplo visual</small></div><div class="bars"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div><div class="chart-labels"><span>JAN</span><span>FEV</span><span>MAR</span><span>ABR</span><span>MAI</span><span>JUN</span></div></div>
+              <div class="mock-goal"><div><small>META EM DESTAQUE</small><b>Reserva de emergência</b></div><strong>68%</strong><div class="mock-progress"><i></i></div></div>
             </div>
+          </div>
+          <div class="floating-chip"><span>↗</span><div><b>Metas em foco</b><small>Um passo de cada vez</small></div></div>
+        </div>
+      </section>
 
-            <small>MENU PRINCIPAL</small>
+      <section class="trust-strip" aria-label="Benefícios">
+        <span>◈ Clareza para decidir</span><span>↗ Receitas e despesas</span><span>◎ Metas acompanhadas</span><span>⌁ Acesso à sua conta</span>
+      </section>
 
-            <nav aria-label="Navegação principal">
+      <section class="features section-wrap" id="recursos">
+        <div class="section-heading">
+          <span class="eyebrow">FEITO PARA O DIA A DIA</span>
+          <h2>Organize hoje.<br><em>Planeje o próximo passo.</em></h2>
+          <p>O NIVIC reúne ferramentas essenciais para você entender melhor seus hábitos financeiros.</p>
+        </div>
+        <div class="feature-grid">
+          <article class="feature-card"><span class="feature-icon">↗</span><h3>Receitas</h3><p>Registre salários, trabalhos, freelances e outras entradas para manter seu histórico organizado.</p></article>
+          <article class="feature-card"><span class="feature-icon coral">↘</span><h3>Despesas</h3><p>Classifique seus gastos e acompanhe para onde seu dinheiro está indo.</p></article>
+          <article class="feature-card"><span class="feature-icon violet">◎</span><h3>Metas</h3><p>Defina objetivos, acompanhe valores acumulados e visualize seu progresso.</p></article>
+          <article class="feature-card"><span class="feature-icon blue">▦</span><h3>Painel geral</h3><p>Consulte saldo calculado, movimentações recentes e um resumo das suas metas.</p></article>
+        </div>
+      </section>
 
-                <button
-                    type="button"
-                    data-page="dashboard"
-                    class="selected"
-                >
-                    ⌂　Início
-                </button>
+      <section class="statement section-wrap" id="sobre">
+        <div><span class="eyebrow">SOBRE O NIVIC</span><h2>Finanças pessoais<br>com menos ruído.</h2></div>
+        <p>O NIVIC é uma ferramenta de organização financeira pessoal. A proposta é ajudar você a registrar informações e acompanhar seus próprios objetivos — sem promessas de rendimento, recomendações de investimento ou soluções mágicas.</p>
+      </section>
 
-                <button type="button" data-page="receitas">
-                    ↗　Receitas
-                </button>
+      <section class="bottom-cta">
+        <span class="eyebrow">SEU PRÓXIMO PASSO COMEÇA AQUI</span>
+        <h2>Coloque suas finanças<br>em perspectiva.</h2>
+        <button class="nav-cta hero-cta" id="bottomRegister" type="button">Criar minha conta <span>↗</span></button>
+      </section>
+    </main>
 
-                <button type="button" data-page="despesas">
-                    ↘　Despesas
-                </button>
+    <footer class="site-footer">
+      <a class="brand" href="#inicio"><span class="brand-mark">◈</span> NIVIC</a>
+      <p>Organização financeira para a vida real.</p>
+      <div class="footer-links"><a href="privacidade.html">Política de Privacidade</a><a href="termos.html">Termos de Uso</a><a href="mailto:contato@nivic.com.br">Contato</a></div>
+      <small>© <span id="year"></span> NIVIC. Todos os direitos reservados.</small>
+    </footer>
+  </section>
 
-                <button type="button" data-page="metas">
-                    ◎　Metas
-                </button>
-
-                <button type="button" data-page="conta">
-                    ♙　Minha conta
-                </button>
-
-            </nav>
-
-            <button type="button" id="logout" class="logout">
-                ⇥　Sair da conta
-            </button>
-
-            <small class="side-note">
-                ● Seus dados estão vinculados à sua conta
-            </small>
-
-        </aside>
-
-        <!-- CONTEÚDO PRINCIPAL -->
-
-        <main>
-
-            <header>
-
-                <div>
-                    <small>SISTEMA DE ORGANIZAÇÃO FINANCEIRA</small>
-                    <h1 id="title">Dashboard financeiro</h1>
-                </div>
-
-                <div class="user">
-
-                    <span id="avatar" aria-hidden="true">U</span>
-
-                    <b id="userName">
-                        Usuário
-                    </b>
-
-                </div>
-
-            </header>
-
-            <div id="content" class="content"></div>
-
-        </main>
-
-    </section>
-
-    <!-- MODAL DE REGISTROS -->
-
-    <div
-        id="modal"
-        class="overlay hide"
-    >
-
-        <form
-            id="recordForm"
-            class="modal"
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby="modalTitle"
-        >
-
-            <div class="modal-title">
-
-                <div>
-                    <small>NIVIC</small>
-                    <h2 id="modalTitle">Novo registro</h2>
-                </div>
-
-                <button
-                    type="button"
-                    id="close"
-                    class="close"
-                    aria-label="Fechar janela"
-                >
-                    ×
-                </button>
-
-            </div>
-
-            <div id="modalFields"></div>
-
-            <p
-                id="modalError"
-                class="error"
-                role="alert"
-                aria-live="polite"
-            ></p>
-
-            <div class="buttons">
-
-                <button
-                    type="button"
-                    id="cancel"
-                    class="secondary"
-                >
-                    Cancelar
-                </button>
-
-                <button
-                    type="submit"
-                    class="primary"
-                >
-                    Salvar
-                </button>
-
-            </div>
-
-        </form>
-
+  <section id="auth" class="auth hide">
+    <button type="button" class="back-site" id="backToSite">← Voltar ao site</button>
+    <div class="auth-card">
+      <a class="brand auth-brand" href="#" id="authBrand"><span class="brand-mark">◈</span> NIVIC</a>
+      <p id="authText">Seu controle financeiro,<br>mais simples.</p>
+      <form id="loginForm">
+        <label class="sr-only" for="loginEmail">E-mail</label>
+        <input id="loginEmail" type="email" placeholder="E-mail" autocomplete="email" required>
+        <label class="sr-only" for="loginPass">Senha</label>
+        <input id="loginPass" type="password" placeholder="Senha" autocomplete="current-password" required>
+        <p class="error" id="loginError" role="alert" aria-live="polite"></p>
+        <button class="primary" type="submit">Entrar na minha conta</button>
+      </form>
+      <form id="registerForm" class="hide">
+        <label class="sr-only" for="regName">Nome completo</label>
+        <input id="regName" type="text" placeholder="Nome completo" autocomplete="name" required>
+        <label class="sr-only" for="regEmail">E-mail</label>
+        <input id="regEmail" type="email" placeholder="E-mail" autocomplete="email" required>
+        <label class="sr-only" for="regPass">Senha</label>
+        <input id="regPass" type="password" placeholder="Senha (mínimo 8 caracteres)" minlength="8" maxlength="72" autocomplete="new-password" required>
+        <label class="sr-only" for="regConfirm">Confirmar senha</label>
+        <input id="regConfirm" type="password" placeholder="Confirmar senha" minlength="8" maxlength="72" autocomplete="new-password" required>
+        <label class="legal-consent"><input type="checkbox" id="acceptTerms" required> Li e aceito os <a href="termos.html" target="_blank" rel="noopener">Termos de Uso</a> e a <a href="privacidade.html" target="_blank" rel="noopener">Política de Privacidade</a>.</label>
+        <p class="error" id="regError" role="alert" aria-live="polite"></p>
+        <button class="primary" type="submit">Criar minha conta</button>
+      </form>
+      <p class="switch" id="switch">Não tem uma conta? <button type="button" data-auth="register">Cadastre-se</button></p>
+      <p class="auth-legal">Ao continuar, você concorda com nossos <a href="termos.html">termos</a> e nossa <a href="privacidade.html">política de privacidade</a>.</p>
     </div>
+  </section>
 
-    <!-- NOTIFICAÇÕES -->
+  <section id="application" class="hide app">
+    <aside class="sidebar">
+      <div class="logo"><b>◈</b> NIVIC</div>
+      <small>MENU PRINCIPAL</small>
+      <nav aria-label="Navegação principal">
+        <button type="button" data-page="dashboard" class="selected">⌂　Início</button>
+        <button type="button" data-page="receitas">↗　Receitas</button>
+        <button type="button" data-page="despesas">↘　Despesas</button>
+        <button type="button" data-page="metas">◎　Metas</button>
+        <button type="button" data-page="conta">♙　Minha conta</button>
+      </nav>
+      <button type="button" id="logout" class="logout">⇥　Sair da conta</button>
+      <small class="side-note">● Seus dados estão vinculados à sua conta</small>
+    </aside>
+    <main>
+      <header><div><small>SISTEMA DE ORGANIZAÇÃO FINANCEIRA</small><h1 id="title">Dashboard financeiro</h1></div><div class="user"><span id="avatar" aria-hidden="true">U</span><b id="userName">Usuário</b></div></header>
+      <div id="content" class="content"></div>
+      <footer class="app-footer"><a href="privacidade.html" target="_blank" rel="noopener">Privacidade</a><a href="termos.html" target="_blank" rel="noopener">Termos de uso</a><span>© <span id="appYear"></span> NIVIC</span></footer>
+    </main>
+  </section>
 
-    <div
-        id="toast"
-        role="status"
-        aria-live="polite"
-    ></div>
-
-    <script src="script.js"></script>
-
+  <div id="modal" class="overlay hide">
+    <form id="recordForm" class="modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+      <div class="modal-title"><div><small>NIVIC</small><h2 id="modalTitle">Novo registro</h2></div><button type="button" id="close" class="close" aria-label="Fechar janela">×</button></div>
+      <div id="modalFields"></div><p id="modalError" class="error" role="alert" aria-live="polite"></p>
+      <div class="buttons"><button type="button" id="cancel" class="secondary">Cancelar</button><button type="submit" class="primary">Salvar</button></div>
+    </form>
+  </div>
+  <div id="toast" role="status" aria-live="polite"></div>
+  <script src="script.js"></script>
 </body>
-
 </html>

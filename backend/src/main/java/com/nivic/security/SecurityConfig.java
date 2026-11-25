@@ -1,4 +1,3 @@
-
 package com.nivic.security;
 
 import org.springframework.context.annotation.Bean;
@@ -52,13 +51,20 @@ public class SecurityConfig {
 
         CorsConfiguration config = new CorsConfiguration();
 
-        config.setAllowedOrigins(List.of("http://127.0.0.1:5500"));
+        config.setAllowedOrigins(List.of(
+                "http://127.0.0.1:5500",
+                "http://192.168.1.221:5500",
+                "http://172.24.52.44:5500"
+        ));
+
         config.setAllowedMethods(List.of(
                 "GET", "POST", "PUT", "DELETE", "OPTIONS"
         ));
+
         config.setAllowedHeaders(List.of(
                 "Authorization", "Content-Type"
         ));
+
         config.setAllowCredentials(false);
 
         UrlBasedCorsConfigurationSource source =
