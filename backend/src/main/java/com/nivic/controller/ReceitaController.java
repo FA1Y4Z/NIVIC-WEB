@@ -8,11 +8,8 @@ import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.jdbc.core.JdbcTemplate;
-import org.springframework.jdbc.support.GeneratedKeyHolder;
-import org.springframework.jdbc.support.KeyHolder;
 import org.springframework.web.bind.annotation.*;
 
-import java.sql.Statement;
 import java.util.List;
 import java.util.Map;
 
@@ -28,6 +25,7 @@ public class ReceitaController {
 
     @GetMapping
     public List<Map<String, Object>> listar(HttpServletRequest request) {
+
         int usuarioId = (Integer) request.getAttribute("usuarioId");
 
         return jdbcTemplate.queryForList("""
@@ -64,27 +62,24 @@ public class ReceitaController {
             HttpServletRequest request) {
 
         int usuarioId = (Integer) request.getAttribute("usuarioId");
-        KeyHolder chave = new GeneratedKeyHolder();
 
-        jdbcTemplate.update(connection -> {
-            var ps = connection.prepareStatement("""
-                    INSERT INTO receitas
-                    (descricao, valor, tipo, data, usuario_id)
-                    VALUES (?, ?, ?, ?, ?)
-                    """, Statement.RETURN_GENERATED_KEYS);
-
-            ps.setString(1, dados.getDescricao());
-            ps.setBigDecimal(2, dados.getValor());
-            ps.setString(3, dados.getTipo());
-            ps.setObject(4, dados.getData());
-            ps.setInt(5, usuarioId);
-
-            return ps;
-        }, chave);
+        Integer id = jdbcTemplate.queryForObject("""
+                INSERT INTO receitas
+                (descricao, valor, tipo, data, usuario_id)
+                VALUES (?, ?, ?, ?, ?)
+                RETURNING id
+                """,
+                Integer.class,
+                dados.getDescricao(),
+                dados.getValor(),
+                dados.getTipo(),
+                dados.getData(),
+                usuarioId
+        );
 
         return ResponseEntity.status(HttpStatus.CREATED).body(Map.of(
                 "mensagem", "Receita cadastrada com sucesso!",
-                "id", chave.getKey().longValue()
+                "id", id
         ));
     }
 

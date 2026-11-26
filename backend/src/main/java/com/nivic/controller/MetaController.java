@@ -4,15 +4,11 @@ package com.nivic.controller;
 import com.nivic.dto.MetaDTO;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
-
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.jdbc.core.JdbcTemplate;
-import org.springframework.jdbc.support.GeneratedKeyHolder;
-import org.springframework.jdbc.support.KeyHolder;
 import org.springframework.web.bind.annotation.*;
 
-import java.sql.Statement;
 import java.util.List;
 import java.util.Map;
 
@@ -64,27 +60,24 @@ public class MetaController {
             HttpServletRequest request) {
 
         int usuarioId = (Integer) request.getAttribute("usuarioId");
-        KeyHolder chave = new GeneratedKeyHolder();
 
-        jdbcTemplate.update(connection -> {
-            var ps = connection.prepareStatement("""
-                    INSERT INTO metas
-                    (nome, valor_objetivo, valor_atual, data_limite, usuario_id)
-                    VALUES (?, ?, ?, ?, ?)
-                    """, Statement.RETURN_GENERATED_KEYS);
-
-            ps.setString(1, dados.getNome());
-            ps.setBigDecimal(2, dados.getValorObjetivo());
-            ps.setBigDecimal(3, dados.getValorAtual());
-            ps.setObject(4, dados.getDataLimite());
-            ps.setInt(5, usuarioId);
-
-            return ps;
-        }, chave);
+        Integer id = jdbcTemplate.queryForObject("""
+                INSERT INTO metas
+                (nome, valor_objetivo, valor_atual, data_limite, usuario_id)
+                VALUES (?, ?, ?, ?, ?)
+                RETURNING id
+                """,
+                Integer.class,
+                dados.getNome(),
+                dados.getValorObjetivo(),
+                dados.getValorAtual(),
+                dados.getDataLimite(),
+                usuarioId
+        );
 
         return ResponseEntity.status(HttpStatus.CREATED).body(Map.of(
                 "mensagem", "Meta cadastrada com sucesso!",
-                "id", chave.getKey().longValue()
+                "id", id
         ));
     }
 
