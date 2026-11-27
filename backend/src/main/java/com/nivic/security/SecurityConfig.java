@@ -55,7 +55,7 @@ public class SecurityConfig {
                 "http://127.0.0.1:5500",
                 "http://192.168.1.221:5500",
                 "http://172.24.52.44:5500",
-                "https://nivic-web.onrender.com"
+                "https://nivic-v8kw.onrender.com"
         ));
 
         config.setAllowedMethods(List.of(
