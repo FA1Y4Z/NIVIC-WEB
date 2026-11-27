@@ -8,7 +8,9 @@ const API_URL = (() => {
         /^192\.168\./.test(host) ||
         /^10\./.test(host);
 
-    return isLocal ? `http://${host}:8080` : '';
+    return isLocal
+        ? `http://${host}:8080`
+        : 'https://nivic.onrender.com';
 })();
 
 const TOKEN_KEY = 'nivic_token';
